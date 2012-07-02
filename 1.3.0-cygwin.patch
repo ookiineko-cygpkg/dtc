@@ -1,0 +1,74 @@
+--- origsrc/dtc/libfdt/libfdt_env.h	2012-06-29 18:16:18.000000000 -0500
++++ src/dtc/libfdt/libfdt_env.h	2012-06-29 18:34:16.037198900 -0500
+@@ -5,19 +5,19 @@
+ #include <stdint.h>
+ #include <string.h>
+ 
+-#define _B(n)	((unsigned long long)((uint8_t *)&x)[n])
++#define __B(n)	((unsigned long long)((uint8_t *)&x)[n])
+ static inline uint32_t fdt32_to_cpu(uint32_t x)
+ {
+-	return (_B(0) << 24) | (_B(1) << 16) | (_B(2) << 8) | _B(3);
++	return (__B(0) << 24) | (__B(1) << 16) | (__B(2) << 8) | __B(3);
+ }
+ #define cpu_to_fdt32(x) fdt32_to_cpu(x)
+ 
+ static inline uint64_t fdt64_to_cpu(uint64_t x)
+ {
+-	return (_B(0) << 56) | (_B(1) << 48) | (_B(2) << 40) | (_B(3) << 32)
+-		| (_B(4) << 24) | (_B(5) << 16) | (_B(6) << 8) | _B(7);
++	return (__B(0) << 56) | (__B(1) << 48) | (__B(2) << 40) | (__B(3) << 32)
++		| (__B(4) << 24) | (__B(5) << 16) | (__B(6) << 8) | __B(7);
+ }
+ #define cpu_to_fdt64(x) fdt64_to_cpu(x)
+-#undef _B
++#undef __B
+ 
+ #endif /* _LIBFDT_ENV_H */
+--- origsrc/dtc/libfdt/Makefile.libfdt	2012-06-29 18:16:18.000000000 -0500
++++ src/dtc/libfdt/Makefile.libfdt	2012-06-29 18:22:04.503795800 -0500
+@@ -3,7 +3,12 @@
+ # This is not a complete Makefile of itself.  Instead, it is designed to
+ # be easily embeddable into other systems of Makefiles.
+ #
++ifeq ($(HOSTOS),cygwin)
++LIBFDT_lib = $(LIBFDT_objdir)/cygfdt-1.dll
++LIBFDT_soname = libfdt.dll.a
++else
+ LIBFDT_soname = libfdt.$(SHAREDLIB_EXT).1
++endif
+ LIBFDT_INCLUDES = fdt.h libfdt.h
+ LIBFDT_VERSION = version.lds
+ LIBFDT_SRCS = fdt.c fdt_ro.c fdt_wip.c fdt_sw.c fdt_rw.c fdt_strerror.c
+--- origsrc/dtc/Makefile	2012-06-29 18:16:18.000000000 -0500
++++ src/dtc/Makefile	2012-06-29 18:34:40.281347600 -0500
+@@ -37,9 +37,14 @@ ifeq ($(HOSTOS),darwin)
+ SHAREDLIB_EXT=dylib
+ SHAREDLIB_LINK_OPTIONS=-dynamiclib -Wl,-install_name -Wl,
+ else
++ifeq ($(HOSTOS),cygwin)
++SHAREDLIB_EXT=dll
++SHAREDLIB_LINK_OPTIONS=-shared -Wl,--out-implib,
++else
+ SHAREDLIB_EXT=so
+ SHAREDLIB_LINK_OPTIONS=-shared -Wl,--version-script=$(LIBFDT_version) -Wl,-soname,
+ endif
++endif
+ 
+ #
+ # Overall rules
+@@ -161,9 +166,14 @@ install: all $(SCRIPTS)
+ 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+ 	$(INSTALL) $(BIN) $(SCRIPTS) $(DESTDIR)$(BINDIR)
+ 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
++ifeq ($(HOSTOS),cygwin)
++	$(INSTALL) $(LIBFDT_lib) $(DESTDIR)$(BINDIR)
++	$(INSTALL) $(LIBFDT_soname) $(DESTDIR)$(LIBDIR)
++else
+ 	$(INSTALL) $(LIBFDT_lib) $(DESTDIR)$(LIBDIR)
+ 	ln -sf $(notdir $(LIBFDT_lib)) $(DESTDIR)$(LIBDIR)/$(LIBFDT_soname)
+ 	ln -sf $(LIBFDT_soname) $(DESTDIR)$(LIBDIR)/libfdt.$(SHAREDLIB_EXT)
++endif
+ 	$(INSTALL) -m 644 $(LIBFDT_archive) $(DESTDIR)$(LIBDIR)
+ 	$(INSTALL) -d $(DESTDIR)$(INCLUDEDIR)
+ 	$(INSTALL) -m 644 $(LIBFDT_include) $(DESTDIR)$(INCLUDEDIR)
