@@ -1,7 +1,0 @@
-category: Libs
-requires:
-external-source: dtc
-sdesc: "Flattened device tree library (runtime)"
-ldesc: "The Device Tree Compiler processes a textual representation of a 
-device tree in the Device Tree Source (DTS) format into a binary device 
-tree in the form expected by the Linux kernel."
