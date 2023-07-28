@@ -1,5 +1,5 @@
 NAME="dtc"
-VERSION=1.4.0
+VERSION=1.6.1
 RELEASE=1
 CATEGORY="System"
 SUMMARY="Device Tree Compiler and utilities"
@@ -7,12 +7,14 @@ DESCRIPTION="The Device Tree Compiler processes a textual representation of a
 device tree in the Device Tree Source (DTS) format into a binary device tree
 in the form expected by the Linux kernel."
 REQUIRES="diffutils"
-HOMEPAGE="http://git.jdl.com/gitweb/?p=dtc.git"
-GIT_URI="git://git.jdl.com/software/dtc.git"
-GIT_TAG=v${VERSION}
-inherit git
+BUILD_REQUIRES="bison flex libyaml-devel"
+
+HOMEPAGE="https://git.kernel.org/pub/scm/utils/dtc/dtc.git/"
+SRC_URI="https://kernel.org/pub/software/utils/dtc/dtc-${PV}.tar.xz"
 
 PATCH_URI="1.4.0-cygwin.patch"
+
+RESTRICT="debuginfo"
 
 PKG_NAMES="dtc libfdt1 libfdt-devel"
 dtc_CONTENTS="--exclude=*.dll usr/bin/* usr/share/"
@@ -24,6 +26,11 @@ libfdt_devel_SUMMARY=${libfdt1_SUMMARY}
 libfdt_devel_CONTENTS="usr/include/ usr/lib/"
 
 MAKEOPTS+=" PREFIX=/usr"
+
+CYGPORT_USE_UNSTABLE_API=1
+src_unpack_hook() {
+	sed -i s:-Werror::g Makefile
+}
 
 src_compile() {
 	lndirs

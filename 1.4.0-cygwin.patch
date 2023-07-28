@@ -5,7 +5,7 @@
  # be easily embeddable into other systems of Makefiles.
  #
 +ifeq ($(HOSTOS),cygwin)
-+LIBFDT_lib = $(LIBFDT_objdir)/cygfdt-1.dll
++LIBFDT_lib = $(LIBFDT_dir)/cygfdt-1.dll
 +LIBFDT_soname = libfdt.dll.a
 +else
  LIBFDT_soname = libfdt.$(SHAREDLIB_EXT).1
@@ -15,33 +15,30 @@
  LIBFDT_SRCS = fdt.c fdt_ro.c fdt_wip.c fdt_sw.c fdt_rw.c fdt_strerror.c fdt_empty_tree.c
 --- origsrc/dtc/Makefile	2012-06-29 18:16:18.000000000 -0500
 +++ src/dtc/Makefile	2012-06-29 18:34:40.281347600 -0500
-@@ -37,9 +37,14 @@ ifeq ($(HOSTOS),darwin)
- SHAREDLIB_EXT=dylib
- SHAREDLIB_LINK_OPTIONS=-dynamiclib -Wl,-install_name -Wl,
+@@ -71,9 +71,9 @@
+ SHAREDLIB_CFLAGS  = -fPIC
+ SHAREDLIB_LDFLAGS = -fPIC -dynamiclib -Wl,-install_name -Wl,
+ else ifeq ($(HOSTOS),$(filter $(HOSTOS),msys cygwin))
+-SHAREDLIB_EXT     = so
++SHAREDLIB_EXT     = dll
+ SHAREDLIB_CFLAGS  =
+-SHAREDLIB_LDFLAGS = -shared -Wl,--version-script=$(LIBFDT_version) -Wl,-soname,
++SHAREDLIB_LDFLAGS = -shared -Wl,--out-implib,
  else
-+ifeq ($(HOSTOS),cygwin)
-+SHAREDLIB_EXT=dll
-+SHAREDLIB_LINK_OPTIONS=-shared -Wl,--out-implib,
-+else
- SHAREDLIB_EXT=so
- SHAREDLIB_LINK_OPTIONS=-shared -Wl,--version-script=$(LIBFDT_version) -Wl,-soname,
- endif
-+endif
- 
- #
- # Overall rules
-@@ -161,9 +166,14 @@ install: all $(SCRIPTS)
- 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
- 	$(INSTALL) $(BIN) $(SCRIPTS) $(DESTDIR)$(BINDIR)
+ SHAREDLIB_EXT     = so
+ SHAREDLIB_CFLAGS  = -fPIC
+@@ -229,9 +229,14 @@
+ install-lib: all
+ 	@$(VECHO) INSTALL-LIB
  	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 +ifeq ($(HOSTOS),cygwin)
 +	$(INSTALL) $(LIBFDT_lib) $(DESTDIR)$(BINDIR)
 +	$(INSTALL) $(LIBFDT_soname) $(DESTDIR)$(LIBDIR)
 +else
- 	$(INSTALL) $(LIBFDT_lib) $(DESTDIR)$(LIBDIR)
+ 	$(INSTALL_LIB) $(LIBFDT_lib) $(DESTDIR)$(LIBDIR)
  	ln -sf $(notdir $(LIBFDT_lib)) $(DESTDIR)$(LIBDIR)/$(LIBFDT_soname)
  	ln -sf $(LIBFDT_soname) $(DESTDIR)$(LIBDIR)/libfdt.$(SHAREDLIB_EXT)
 +endif
- 	$(INSTALL) -m 644 $(LIBFDT_archive) $(DESTDIR)$(LIBDIR)
- 	$(INSTALL) -d $(DESTDIR)$(INCLUDEDIR)
- 	$(INSTALL) -m 644 $(LIBFDT_include) $(DESTDIR)$(INCLUDEDIR)
+ 	$(INSTALL_DATA) $(LIBFDT_archive) $(DESTDIR)$(LIBDIR)
+ 
+ install-includes:
